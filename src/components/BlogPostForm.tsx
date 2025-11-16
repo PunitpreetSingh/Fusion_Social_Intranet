@@ -1,0 +1,233 @@
+import { X, AtSign, Paperclip, ChevronDown, ChevronUp } from 'lucide-react';
+import { User } from '../types';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+
+interface BlogPostFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: User | null;
+}
+
+export function BlogPostForm({ isOpen, onClose, user }: BlogPostFormProps) {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [visibilityType, setVisibilityType] = useState('personal_blog');
+  const [placeName, setPlaceName] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [restrictComments, setRestrictComments] = useState(false);
+  const [schedulePublish, setSchedulePublish] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [labels, setLabels] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/formLabels.json')
+      .then(res => res.json())
+      .then(data => setLabels(data.blogPost))
+      .catch(() => {});
+  }, []);
+
+  const handlePublish = async (status: 'published' | 'draft') => {
+    if (!title.trim() || !user) return;
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('blog_posts').insert({
+        user_id: user.id,
+        title: title,
+        content: content,
+        visibility_type: visibilityType,
+        place_name: placeName,
+        blog_name: user.name + "'s Blog",
+        tags: selectedTags,
+        status: status,
+        restrict_comments: restrictComments,
+      });
+
+      if (error) throw error;
+
+      setTitle('');
+      setContent('');
+      setPlaceName('');
+      setSelectedTags([]);
+      onClose();
+    } catch (error) {
+      console.error('Error saving blog post:', error);
+      alert('Failed to save blog post');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen || !labels) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-100">
+      <div className="min-h-screen">
+        <div className="bg-white border-b border-gray-200 p-4">
+          <div className="flex items-center justify-between max-w-5xl mx-auto">
+            <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-blue-600" fill="currentColor">
+                <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+              </svg>
+              {labels.title}
+            </h1>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto p-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={labels.titlePlaceholder}
+              className="w-full text-2xl border-b-2 border-blue-500 pb-2 mb-4 focus:outline-none"
+            />
+
+            <div className="border border-gray-300 rounded min-h-[300px] p-4 mb-4">
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full min-h-[250px] focus:outline-none resize-none"
+                placeholder=""
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
+                <AtSign size={16} />
+                {labels.mentionButton}
+              </button>
+              <button className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
+                <Paperclip size={16} />
+                {labels.attachButton}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{labels.visibilitySection}</h2>
+
+            {labels.visibilityOptions.map((option: any) => (
+              <div key={option.id} className="mb-4">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value={option.id}
+                    checked={visibilityType === option.id}
+                    onChange={() => setVisibilityType(option.id)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{option.label}</div>
+                    <div className="text-sm text-gray-600">{option.description}</div>
+                    {option.id === 'place' && visibilityType === 'place' && (
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={placeName}
+                          onChange={(e) => setPlaceName(e.target.value)}
+                          placeholder={option.inputPlaceholder}
+                          className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <button className="px-4 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm">
+                          {option.buttonText}
+                        </button>
+                      </div>
+                    )}
+                    {option.id === 'personal_blog' && visibilityType === 'personal_blog' && (
+                      <div className="mt-2 text-sm">
+                        <span className="font-medium">{user?.name}'s Blog</span>{' '}
+                        <a href="#" className="text-blue-600 hover:underline">{option.changeBlogNameLink}</a>
+                      </div>
+                    )}
+                  </div>
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">{labels.tagsSection}</h2>
+            <p className="text-sm text-gray-600 mb-3">{labels.tagsDescription}</p>
+            <input
+              type="text"
+              placeholder=""
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-lg font-semibold text-gray-900 w-full"
+            >
+              {showAdvanced ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              {labels.advancedOptions}
+            </button>
+            {showAdvanced && (
+              <div className="mt-4 space-y-3">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={restrictComments}
+                    onChange={(e) => setRestrictComments(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span className="text-sm text-gray-700">{labels.restrictCommentsCheckbox}</span>
+                </label>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={schedulePublish}
+                    onChange={(e) => setSchedulePublish(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span className="text-sm text-gray-700">{labels.schedulePublishCheckbox}</span>
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePublish('published')}
+                disabled={!title.trim() || isSubmitting}
+                className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {labels.publishButton}
+              </button>
+              <button
+                onClick={() => handlePublish('draft')}
+                disabled={!title.trim() || isSubmitting}
+                className="bg-white text-gray-700 px-6 py-2 rounded border border-gray-300 hover:bg-gray-50"
+              >
+                {labels.saveDraftButton}
+              </button>
+              <button
+                onClick={onClose}
+                className="bg-white text-gray-700 px-6 py-2 rounded border border-gray-300 hover:bg-gray-50"
+              >
+                {labels.cancelButton}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1 text-red-700">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+              <span className="text-xs font-medium">{labels.restrictionMessage}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

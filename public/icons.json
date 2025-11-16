@@ -1,0 +1,32 @@
+{
+  "header": {
+    "icons": [
+      {
+        "id": "people",
+        "name": "People Icon",
+        "ariaLabel": "People"
+      },
+      {
+        "id": "notifications",
+        "name": "Notification Bell Icon",
+        "ariaLabel": "Notifications",
+        "showBadge": true
+      },
+      {
+        "id": "apps",
+        "name": "Dotted Square Icon",
+        "ariaLabel": "Apps"
+      },
+      {
+        "id": "create",
+        "name": "Plus Icon",
+        "ariaLabel": "Create"
+      },
+      {
+        "id": "search",
+        "name": "Search Icon",
+        "ariaLabel": "Search"
+      }
+    ]
+  }
+}

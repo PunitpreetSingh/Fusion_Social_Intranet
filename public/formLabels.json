@@ -1,0 +1,115 @@
+{
+  "createMenu": {
+    "title": "Create:",
+    "sections": {
+      "create": [
+        { "id": "status_update", "label": "Status Update", "description": "Share what you're up to", "hasForm": true },
+        { "id": "document", "label": "Document", "description": "Collaborate on a document", "hasForm": true },
+        { "id": "blog_post", "label": "Blog Post", "description": "Share your thoughts", "hasForm": true }
+      ],
+      "more": [
+        { "id": "event", "label": "Event", "hasForm": false },
+        { "id": "message", "label": "Message", "hasForm": false },
+        { "id": "discussion", "label": "Discussion", "hasForm": false },
+        { "id": "poll", "label": "Poll", "hasForm": false },
+        { "id": "video", "label": "Video", "hasForm": false },
+        { "id": "files", "label": "Files", "hasForm": false },
+        { "id": "bookmark", "label": "Bookmark", "hasForm": false }
+      ],
+      "communities": [
+        { "id": "space", "label": "Space", "hasForm": true },
+        { "id": "group", "label": "Group", "hasForm": false },
+        { "id": "project", "label": "Project", "hasForm": false }
+      ]
+    }
+  },
+  "statusUpdate": {
+    "title": "Post a status update",
+    "postInLabel": "Post in",
+    "postInPlaceholder": "Enter the name of Space",
+    "postButton": "Post",
+    "cancelButton": "Cancel",
+    "restrictionMessage": "INTERNAL ONLY"
+  },
+  "document": {
+    "title": "Create New Document",
+    "titlePlaceholder": "Document title",
+    "mentionButton": "Mention",
+    "attachButton": "Attach",
+    "visibilitySection": "Visibility and Audience",
+    "visibilityOptions": [
+      {
+        "id": "place",
+        "label": "In a Place",
+        "description": "Reach a specific audience or organize your posts by subject or group.",
+        "inputPlaceholder": "Enter the name of places.",
+        "buttonText": "Browse Places"
+      },
+      {
+        "id": "hidden",
+        "label": "Hidden",
+        "description": "Hide your content from everyone else."
+      },
+      {
+        "id": "specific_people",
+        "label": "Specific People",
+        "description": "Work privately with a few people before opening it up to your community.",
+        "buttonText": "Select People"
+      },
+      {
+        "id": "community",
+        "label": "The Daimler Truck Social Intranet Community",
+        "description": "Make your content visible to everyone in your community"
+      }
+    ],
+    "tagsSection": "Tags",
+    "tagsDescription": "Tag your content to make it easier to find",
+    "availableTags": ["daimler_service", "mobile_ready", "training", "mftbc", "innovation", "Daimler busses", "social intranet"],
+    "advancedOptions": "Advanced Options",
+    "addAuthorsCheckbox": "Add authors By default, you are the only author on this document.",
+    "restrictCommentsCheckbox": "Restrict comments",
+    "publishButton": "Publish",
+    "saveDraftButton": "Save Draft",
+    "cancelButton": "Cancel",
+    "restrictionMessage": "INTERNAL ONLY"
+  },
+  "blogPost": {
+    "title": "Write a new Blog Post",
+    "titlePlaceholder": "Blog title",
+    "mentionButton": "Mention",
+    "attachButton": "Attach",
+    "visibilitySection": "Visibility",
+    "visibilityOptions": [
+      {
+        "id": "place",
+        "label": "In a Place",
+        "description": "Reach a specific audience or organize your posts by subject or group.",
+        "inputPlaceholder": "Enter the name of a place",
+        "buttonText": "Browse Places"
+      },
+      {
+        "id": "personal_blog",
+        "label": "Your personal blog",
+        "description": "Make your content visible to everyone in your community.",
+        "blogNameLabel": "Mohit Verma's Blog",
+        "changeBlogNameLink": "Change blog name"
+      }
+    ],
+    "tagsSection": "Tags",
+    "tagsDescription": "Tag your content to make it easier to find",
+    "advancedOptions": "Advanced Options",
+    "restrictCommentsCheckbox": "Restrict comments",
+    "schedulePublishCheckbox": "Schedule when this post gets published. By default, this post will be published immediately.",
+    "publishButton": "Publish",
+    "saveDraftButton": "Save Draft",
+    "cancelButton": "Cancel",
+    "restrictionMessage": "INTERNAL ONLY"
+  },
+  "space": {
+    "title": "Create a space",
+    "subtitle": "(Select a different type)",
+    "question": "Where would you like to create your space?",
+    "inputPlaceholder": "",
+    "browseLink": "Browse for more places"
+  }
+}
