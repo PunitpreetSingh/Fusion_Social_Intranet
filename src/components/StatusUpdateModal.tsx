@@ -1,9 +1,9 @@
 import { X } from 'lucide-react';
 import { User } from '../types';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { RichTextEditor } from './RichTextEditor';
 import { PlaceSearch } from './PlaceSearch';
+import apiClient from '../api/client';
 
 interface StatusUpdateModalProps {
   isOpen: boolean;
@@ -35,27 +35,34 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
   const handlePost = async () => {
     if (!content.trim() || !user) return;
 
-    if (user.role !== 'internal') {
+    if (user.role !== 'internal' && user.role !== 'admin') {
       alert('Only internal users can post status updates');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('status_updates').insert({
-        user_id: user.id,
-        content: content,
-        post_in: postIn,
+      console.log('Submitting to backend:', {
+        authorId: user.id,
+        body: content,
+        postIn: postIn,
       });
 
-      if (error) throw error;
+      const response = await apiClient.createStatusUpdate({
+        authorId: user.id,
+        body: content,
+        postIn: postIn,
+      });
 
+      console.log('Response:', response);
+
+      alert('✅ Status update posted successfully!');
       setContent('');
       setPostIn('');
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error posting status update:', error);
-      alert('Failed to post status update');
+      alert(`❌ Failed to post status update: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }

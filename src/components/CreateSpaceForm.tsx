@@ -1,6 +1,6 @@
 import { User } from '../types';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import apiClient from '../api/client';
 
 interface CreateSpaceFormProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface CreateSpaceFormProps {
 }
 
 export function CreateSpaceForm({ isOpen, onClose, user }: CreateSpaceFormProps) {
+  const [spaceName, setSpaceName] = useState('');
   const [parentPlace, setParentPlace] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [labels, setLabels] = useState({
@@ -27,23 +28,32 @@ export function CreateSpaceForm({ isOpen, onClose, user }: CreateSpaceFormProps)
   }, []);
 
   const handleCreate = async () => {
-    if (!parentPlace.trim() || !user) return;
+    if (!spaceName.trim() || !user) {
+      alert('Please enter a space name');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('spaces').insert({
-        user_id: user.id,
-        name: 'New Space',
+      const payload = {
+        name: spaceName,
+        createdBy: user.id,
         parent_place: parentPlace,
-      });
+      };
 
-      if (error) throw error;
+      console.log('Submitting to backend:', payload);
 
+      const response = await apiClient.createSpace(payload);
+
+      console.log('Response:', response);
+
+      alert('✅ Space created successfully!');
+      setSpaceName('');
       setParentPlace('');
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating space:', error);
-      alert('Failed to create space');
+      alert(`❌ Failed to create space: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -75,13 +85,24 @@ export function CreateSpaceForm({ isOpen, onClose, user }: CreateSpaceFormProps)
           <a href="#" className="text-sm text-blue-600 hover:underline ml-7">{labels.subtitle}</a>
         </div>
 
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Space Name *</label>
+          <input
+            type="text"
+            value={spaceName}
+            onChange={(e) => setSpaceName(e.target.value)}
+            placeholder="Enter space name"
+            className="w-full border-b-2 border-blue-500 px-2 py-2 text-sm focus:outline-none"
+          />
+        </div>
+
         <div className="mb-6">
           <h3 className="text-base font-semibold text-gray-900 mb-3">{labels.question}</h3>
           <input
             type="text"
             value={parentPlace}
             onChange={(e) => setParentPlace(e.target.value)}
-            placeholder={labels.inputPlaceholder}
+            placeholder={labels.inputPlaceholder || 'Enter parent place (optional)'}
             className="w-full border-b-2 border-blue-500 px-2 py-2 text-sm focus:outline-none"
           />
         </div>
@@ -90,6 +111,26 @@ export function CreateSpaceForm({ isOpen, onClose, user }: CreateSpaceFormProps)
           <a href="#" className="text-sm text-blue-600 hover:underline">
             {labels.browseLink}
           </a>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={handleCreate}
+            disabled={!spaceName.trim() || isSubmitting}
+            className="bg-black text-white px-6 py-2 text-sm rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          >
+            {isSubmitting ? 'Creating...' : 'Create Space'}
+          </button>
+          <button
+            onClick={() => {
+              setSpaceName('');
+              setParentPlace('');
+              onClose();
+            }}
+            className="bg-white text-gray-700 px-6 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
         </div>
         </div>
       </div>

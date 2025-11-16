@@ -1,7 +1,7 @@
 import { X, AtSign, Paperclip, ChevronDown, ChevronUp } from 'lucide-react';
 import { User } from '../types';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import apiClient from '../api/client';
 
 interface DocumentFormProps {
   isOpen: boolean;
@@ -32,27 +32,32 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('documents').insert({
-        user_id: user.id,
+      const payload = {
+        authorId: user.id,
         title: title,
-        content: content,
-        visibility_type: visibilityType,
-        place_name: placeName,
+        body: content,
+        visibility: {
+          type: visibilityType,
+          placeName: placeName,
+        },
         tags: selectedTags,
-        status: status,
-        restrict_comments: restrictComments,
-      });
+      };
 
-      if (error) throw error;
+      console.log('Submitting to backend:', payload);
 
+      const response = await apiClient.createDocument(payload);
+
+      console.log('Response:', response);
+
+      alert(`✅ Document ${status === 'published' ? 'published' : 'saved as draft'} successfully!`);
       setTitle('');
       setContent('');
       setPlaceName('');
       setSelectedTags([]);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving document:', error);
-      alert('Failed to save document');
+      alert(`❌ Failed to save document: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }

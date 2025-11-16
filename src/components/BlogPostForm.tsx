@@ -1,7 +1,7 @@
 import { X, AtSign, Paperclip, ChevronDown, ChevronUp } from 'lucide-react';
 import { User } from '../types';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import apiClient from '../api/client';
 
 interface BlogPostFormProps {
   isOpen: boolean;
@@ -33,28 +33,33 @@ export function BlogPostForm({ isOpen, onClose, user }: BlogPostFormProps) {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('blog_posts').insert({
-        user_id: user.id,
+      const payload = {
+        authorId: user.id,
         title: title,
-        content: content,
-        visibility_type: visibilityType,
-        place_name: placeName,
-        blog_name: user.name + "'s Blog",
+        body: content,
+        blogFor: user.name + "'s Blog",
+        visibility: {
+          type: visibilityType,
+          placeName: placeName,
+        },
         tags: selectedTags,
-        status: status,
-        restrict_comments: restrictComments,
-      });
+      };
 
-      if (error) throw error;
+      console.log('Submitting to backend:', payload);
 
+      const response = await apiClient.createBlogPost(payload);
+
+      console.log('Response:', response);
+
+      alert(`✅ Blog post ${status === 'published' ? 'published' : 'saved as draft'} successfully!`);
       setTitle('');
       setContent('');
       setPlaceName('');
       setSelectedTags([]);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving blog post:', error);
-      alert('Failed to save blog post');
+      alert(`❌ Failed to save blog post: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
