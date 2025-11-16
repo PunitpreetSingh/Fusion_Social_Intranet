@@ -8,6 +8,7 @@ import { StatusUpdateModal } from './components/StatusUpdateModal';
 import { DocumentForm } from './components/DocumentForm';
 import { BlogPostForm } from './components/BlogPostForm';
 import { CreateSpaceForm } from './components/CreateSpaceForm';
+import { DatabaseTest } from './components/DatabaseTest';
 import { useConfiguration } from './hooks/useConfiguration';
 import { useUser } from './hooks/useUser';
 import { useModal } from './contexts/ModalContext';
@@ -96,6 +97,8 @@ function App() {
           user={user}
         />
       )}
+
+      <DatabaseTest />
     </div>
   );
 }
