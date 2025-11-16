@@ -72,14 +72,17 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 animate-fadeIn"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
+        className="fixed inset-0 bg-black bg-opacity-50"
+        style={{ zIndex: 999 }}
+        onClick={onClose}
+      />
+      <div
+        className="fixed inset-0 flex items-center justify-center pointer-events-none"
+        style={{ zIndex: 1000 }}
         role="dialog"
         aria-modal="true"
       >
-        <div className="bg-white rounded shadow-xl w-full max-w-2xl transform transition-all duration-300 animate-slideIn m-4">
+        <div className="bg-white rounded shadow-xl w-full max-w-2xl m-4 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <h2 className="text-base font-semibold text-gray-900">{labels.title}</h2>
             <button

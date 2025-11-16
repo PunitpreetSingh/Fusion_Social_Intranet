@@ -61,7 +61,7 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
   if (!isOpen || !labels) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-100">
+    <div className="fixed inset-0 overflow-y-auto bg-gray-100" style={{ zIndex: 1000 }}>
       <div className="min-h-screen">
         <div className="bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between max-w-5xl mx-auto">

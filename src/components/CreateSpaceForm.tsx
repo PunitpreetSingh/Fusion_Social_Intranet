@@ -52,8 +52,17 @@ export function CreateSpaceForm({ isOpen, onClose, user }: CreateSpaceFormProps)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded shadow-xl w-full max-w-md p-6">
+    <>
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50"
+        style={{ zIndex: 999 }}
+        onClick={onClose}
+      />
+      <div
+        className="fixed inset-0 flex items-center justify-center pointer-events-none"
+        style={{ zIndex: 1000 }}
+      >
+        <div className="bg-white rounded shadow-xl w-full max-w-md p-6 m-4 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900">
             <span className="flex items-center gap-2">
@@ -82,7 +91,8 @@ export function CreateSpaceForm({ isOpen, onClose, user }: CreateSpaceFormProps)
             {labels.browseLink}
           </a>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

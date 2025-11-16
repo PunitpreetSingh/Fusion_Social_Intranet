@@ -31,9 +31,7 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
     }
 
     onClose();
-    setTimeout(() => {
-      openModal(itemId, { user });
-    }, 150);
+    openModal(itemId, { user });
   };
 
   if (!isOpen || !menuConfig) return null;
@@ -42,13 +40,12 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
     <>
       <div
         className="fixed inset-0 bg-black bg-opacity-30"
-        style={{ zIndex: 998 }}
+        style={{ zIndex: 40, pointerEvents: 'auto' }}
         onClick={onClose}
       />
       <div
         className="fixed top-16 right-4 animate-slideInRight"
-        style={{ zIndex: 999 }}
-        onClick={(e) => e.stopPropagation()}
+        style={{ zIndex: 50, pointerEvents: 'auto' }}
       >
         <div className="bg-white rounded-lg shadow-2xl w-80 max-h-[calc(100vh-5rem)] overflow-y-auto">
           <div className="p-4">
