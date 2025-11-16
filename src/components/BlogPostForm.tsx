@@ -1,7 +1,7 @@
 import { X, AtSign, Paperclip, ChevronDown, ChevronUp } from 'lucide-react';
 import { User } from '../types';
 import { useState, useEffect } from 'react';
-import apiClient from '../api/client';
+import { apiFetch } from '../api/client';
 
 interface BlogPostFormProps {
   isOpen: boolean;
@@ -23,8 +23,8 @@ export function BlogPostForm({ isOpen, onClose, user }: BlogPostFormProps) {
 
   useEffect(() => {
     fetch('/formLabels.json')
-      .then(res => res.json())
-      .then(data => setLabels(data.blogPost))
+      .then((res) => res.json())
+      .then((data) => setLabels(data.blogPost))
       .catch(() => {});
   }, []);
 
@@ -32,34 +32,47 @@ export function BlogPostForm({ isOpen, onClose, user }: BlogPostFormProps) {
     if (!title.trim() || !user) return;
 
     setIsSubmitting(true);
+
     try {
       const payload = {
-        authorId: user.id,
-        title: title,
+        title,
         body: content,
-        blogFor: user.name + "'s Blog",
+        authorId: user.id,
+        blogFor: `${user.name}'s Blog`,
+        status,
         visibility: {
           type: visibilityType,
-          placeName: placeName,
+          placeName,
         },
         tags: selectedTags,
+        restrictComments,
+        schedulePublish,
       };
 
-      console.log('Submitting to backend:', payload);
+      console.log("Submitting:", payload);
 
-      const response = await apiClient.createBlogPost(payload);
+      const response = await apiFetch("/api/content/blog", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
-      console.log('Response:', response);
+      console.log("Server:", response);
 
-      alert(`✅ Blog post ${status === 'published' ? 'published' : 'saved as draft'} successfully!`);
-      setTitle('');
-      setContent('');
-      setPlaceName('');
+      alert(
+        status === "published"
+          ? "✅ Blog post published successfully!"
+          : "💾 Blog post saved as draft!"
+      );
+
+      setTitle("");
+      setContent("");
+      setPlaceName("");
       setSelectedTags([]);
       onClose();
+
     } catch (error: any) {
-      console.error('Error saving blog post:', error);
-      alert(`❌ Failed to save blog post: ${error.message}`);
+      console.error("Error saving blog:", error);
+      alert(`❌ Failed to save blog: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -68,59 +81,64 @@ export function BlogPostForm({ isOpen, onClose, user }: BlogPostFormProps) {
   if (!isOpen || !labels) return null;
 
   return (
-    <div className="fixed inset-0 overflow-y-auto bg-gray-100" style={{ zIndex: 1000 }}>
+    <div className="fixed inset-0 overflow-y-auto bg-gray-100 z-[1000]">
       <div className="min-h-screen">
-        <div className="bg-white border-b border-gray-200 p-4">
+
+        {/* HEADER */}
+        <div className="bg-white border-b p-4">
           <div className="flex items-center justify-between max-w-5xl mx-auto">
-            <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <h1 className="text-xl font-semibold flex items-center gap-2 text-gray-900">
               <svg viewBox="0 0 24 24" className="w-5 h-5 text-blue-600" fill="currentColor">
                 <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
               </svg>
               {labels.title}
             </h1>
+
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
               <X size={24} />
             </button>
           </div>
         </div>
 
+        {/* BODY */}
         <div className="max-w-5xl mx-auto p-6">
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+
+          {/* BLOG TITLE + EDITOR */}
+          <div className="bg-white rounded shadow-sm p-6 mb-6">
+
             <input
-              type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={labels.titlePlaceholder}
-              className="w-full text-2xl border-b-2 border-blue-500 pb-2 mb-4 focus:outline-none"
+              className="w-full text-2xl border-b-2 border-blue-500 pb-2 mb-4"
             />
 
-            <div className="border border-gray-300 rounded min-h-[300px] p-4 mb-4">
+            <div className="border rounded p-4 min-h-[300px] mb-4">
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="w-full min-h-[250px] focus:outline-none resize-none"
-                placeholder=""
               />
             </div>
 
             <div className="flex gap-2">
-              <button className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                <AtSign size={16} />
-                {labels.mentionButton}
+              <button className="flex items-center gap-1 px-4 py-2 border rounded text-sm hover:bg-gray-50">
+                <AtSign size={16} /> {labels.mentionButton}
               </button>
-              <button className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                <Paperclip size={16} />
-                {labels.attachButton}
+              <button className="flex items-center gap-1 px-4 py-2 border rounded text-sm hover:bg-gray-50">
+                <Paperclip size={16} /> {labels.attachButton}
               </button>
             </div>
+
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">{labels.visibilitySection}</h2>
+          {/* VISIBILITY SECTION */}
+          <div className="bg-white rounded shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">{labels.visibilitySection}</h2>
 
             {labels.visibilityOptions.map((option: any) => (
               <div key={option.id} className="mb-4">
-                <label className="flex items-start gap-2 cursor-pointer">
+                <label className="flex gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="visibility"
@@ -130,26 +148,27 @@ export function BlogPostForm({ isOpen, onClose, user }: BlogPostFormProps) {
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">{option.label}</div>
+                    <div className="font-medium">{option.label}</div>
                     <div className="text-sm text-gray-600">{option.description}</div>
-                    {option.id === 'place' && visibilityType === 'place' && (
+
+                    {option.id === "place" && visibilityType === "place" && (
                       <div className="flex gap-2 mt-2">
                         <input
-                          type="text"
                           value={placeName}
                           onChange={(e) => setPlaceName(e.target.value)}
                           placeholder={option.inputPlaceholder}
-                          className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="flex-1 border rounded px-3 py-1"
                         />
-                        <button className="px-4 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm">
+                        <button className="px-4 py-1 border rounded hover:bg-gray-50 text-sm">
                           {option.buttonText}
                         </button>
                       </div>
                     )}
-                    {option.id === 'personal_blog' && visibilityType === 'personal_blog' && (
+
+                    {option.id === "personal_blog" && visibilityType === "personal_blog" && (
                       <div className="mt-2 text-sm">
-                        <span className="font-medium">{user?.name}'s Blog</span>{' '}
-                        <a href="#" className="text-blue-600 hover:underline">{option.changeBlogNameLink}</a>
+                        <span className="font-medium">{user?.name}'s Blog</span>{" "}
+                        <a className="text-blue-600 hover:underline">{option.changeBlogNameLink}</a>
                       </div>
                     )}
                   </div>
@@ -158,79 +177,103 @@ export function BlogPostForm({ isOpen, onClose, user }: BlogPostFormProps) {
             ))}
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">{labels.tagsSection}</h2>
+          {/* TAGS */}
+          <div className="bg-white rounded shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-2">{labels.tagsSection}</h2>
             <p className="text-sm text-gray-600 mb-3">{labels.tagsDescription}</p>
+
             <input
-              type="text"
-              placeholder=""
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full border rounded px-3 py-2 text-sm"
+              placeholder="Add tags"
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter" && e.target.value.trim()) {
+                  setSelectedTags([...selectedTags, e.target.value.trim()]);
+                  e.target.value = "";
+                }
+              }}
             />
+
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 rounded bg-blue-100 text-blue-700 border border-blue-300 text-sm cursor-pointer"
+                  onClick={() =>
+                    setSelectedTags(selectedTags.filter((t) => t !== tag))
+                  }
+                >
+                  {tag} ✕
+                </span>
+              ))}
+            </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          {/* ADVANCED OPTIONS */}
+          <div className="bg-white rounded shadow-sm p-6 mb-6">
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-lg font-semibold text-gray-900 w-full"
+              className="flex items-center gap-2 text-lg font-semibold"
             >
               {showAdvanced ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
               {labels.advancedOptions}
             </button>
+
             {showAdvanced && (
               <div className="mt-4 space-y-3">
-                <label className="flex items-start gap-2 cursor-pointer">
+                <label className="flex gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={restrictComments}
                     onChange={(e) => setRestrictComments(e.target.checked)}
-                    className="mt-1"
                   />
-                  <span className="text-sm text-gray-700">{labels.restrictCommentsCheckbox}</span>
+                  <span className="text-sm">{labels.restrictCommentsCheckbox}</span>
                 </label>
-                <label className="flex items-start gap-2 cursor-pointer">
+
+                <label className="flex gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={schedulePublish}
                     onChange={(e) => setSchedulePublish(e.target.checked)}
-                    className="mt-1"
                   />
-                  <span className="text-sm text-gray-700">{labels.schedulePublishCheckbox}</span>
+                  <span className="text-sm">{labels.schedulePublishCheckbox}</span>
                 </label>
               </div>
             )}
+
           </div>
 
+          {/* BUTTONS */}
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <button
-                onClick={() => handlePublish('published')}
                 disabled={!title.trim() || isSubmitting}
-                className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => handlePublish("published")}
+                className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
               >
                 {labels.publishButton}
               </button>
+
               <button
-                onClick={() => handlePublish('draft')}
                 disabled={!title.trim() || isSubmitting}
-                className="bg-white text-gray-700 px-6 py-2 rounded border border-gray-300 hover:bg-gray-50"
+                onClick={() => handlePublish("draft")}
+                className="bg-white text-gray-700 px-6 py-2 rounded border"
               >
                 {labels.saveDraftButton}
               </button>
-              <button
-                onClick={onClose}
-                className="bg-white text-gray-700 px-6 py-2 rounded border border-gray-300 hover:bg-gray-50"
-              >
+
+              <button onClick={onClose} className="bg-white border px-6 py-2 rounded">
                 {labels.cancelButton}
               </button>
             </div>
 
-            <div className="flex items-center gap-1 text-red-700">
+            <div className="flex items-center gap-1 text-red-700 text-xs">
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
               </svg>
-              <span className="text-xs font-medium">{labels.restrictionMessage}</span>
+              {labels.restrictionMessage}
             </div>
           </div>
+
         </div>
       </div>
     </div>
