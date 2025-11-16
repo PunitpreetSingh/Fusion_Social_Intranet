@@ -1,7 +1,7 @@
 import { X, AtSign, Paperclip, ChevronDown, ChevronUp } from 'lucide-react';
 import { User } from '../types';
 import { useState, useEffect } from 'react';
-import apiClient from '../api/client';
+import { apiFetch } from '../api/client';
 
 interface DocumentFormProps {
   isOpen: boolean;
@@ -27,37 +27,49 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
       .catch(() => {});
   }, []);
 
-  const handlePublish = async (status: 'published' | 'draft') => {
+  const handlePublish = async (status: "published" | "draft") => {
     if (!title.trim() || !user) return;
 
     setIsSubmitting(true);
+
     try {
       const payload = {
-        title: title,
+        title,
         body: content,
         visibility: {
           type: visibilityType,
-          placeName: placeName,
+          placeName,
         },
         tags: selectedTags,
+        restrictComments,
+        status,
         createdBy: user.id,
       };
 
-      console.log('Submitting to backend:', payload);
+      console.log("Submitting payload:", payload);
 
-      const response = await apiClient.createDocument(payload);
+      const response = await apiFetch("/api/content/document", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
-      console.log('Response:', response);
+      console.log("Server response:", response);
 
-      alert(`✅ Document ${status === 'published' ? 'published' : 'saved as draft'} successfully!`);
-      setTitle('');
-      setContent('');
-      setPlaceName('');
+      alert(
+        status === "published"
+          ? "✅ Document published successfully!"
+          : "💾 Document saved as draft!"
+      );
+
+      setTitle("");
+      setContent("");
+      setPlaceName("");
       setSelectedTags([]);
+
       onClose();
     } catch (error: any) {
-      console.error('Error saving document:', error);
-      alert(`❌ Failed to save document: ${error.message}`);
+      console.error("Failed to save document:", error);
+      alert(`❌ Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -66,8 +78,10 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
   if (!isOpen || !labels) return null;
 
   return (
-    <div className="fixed inset-0 overflow-y-auto bg-gray-100" style={{ zIndex: 1000 }}>
+    <div className="fixed inset-0 overflow-y-auto bg-gray-100 z-[1000]">
       <div className="min-h-screen">
+
+        {/* HEADER BAR */}
         <div className="bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between max-w-5xl mx-auto">
             <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
@@ -82,8 +96,12 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
           </div>
         </div>
 
+        {/* MAIN BODY */}
         <div className="max-w-5xl mx-auto p-6">
+
+          {/* DOCUMENT DETAILS */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+
             <input
               type="text"
               value={title}
@@ -97,24 +115,23 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="w-full min-h-[250px] focus:outline-none resize-none"
-                placeholder=""
               />
             </div>
 
+            {/* Buttons */}
             <div className="flex gap-2">
-              <button className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                <AtSign size={16} />
-                {labels.mentionButton}
+              <button className="flex items-center gap-1 px-4 py-2 border rounded text-sm hover:bg-gray-50">
+                <AtSign size={16} /> {labels.mentionButton}
               </button>
-              <button className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                <Paperclip size={16} />
-                {labels.attachButton}
+              <button className="flex items-center gap-1 px-4 py-2 border rounded text-sm hover:bg-gray-50">
+                <Paperclip size={16} /> {labels.attachButton}
               </button>
             </div>
           </div>
 
+          {/* VISIBILITY SECTION */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">{labels.visibilitySection}</h2>
+            <h2 className="text-lg font-semibold mb-4">{labels.visibilitySection}</h2>
 
             {labels.visibilityOptions.map((option: any) => (
               <div key={option.id} className="mb-4">
@@ -128,25 +145,28 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">{option.label}</div>
+                    <div className="font-medium">{option.label}</div>
                     <div className="text-sm text-gray-600">{option.description}</div>
+
+                    {/* PLACE INPUT */}
                     {option.inputPlaceholder && visibilityType === option.id && (
                       <div className="flex gap-2 mt-2">
                         <input
-                          type="text"
                           value={placeName}
                           onChange={(e) => setPlaceName(e.target.value)}
                           placeholder={option.inputPlaceholder}
-                          className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="flex-1 border rounded px-3 py-1.5 text-sm"
                         />
-                        <button className="px-4 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm">
+                        <button className="px-4 py-1.5 border rounded text-sm hover:bg-gray-50">
                           {option.buttonText}
                         </button>
                       </div>
                     )}
-                    {option.id === 'specific_people' && visibilityType === option.id && (
+
+                    {/* SPECIFIC PEOPLE BUTTON */}
+                    {option.id === "specific_people" && visibilityType === option.id && (
                       <div className="mt-2">
-                        <button className="px-4 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm">
+                        <button className="px-4 py-1.5 border rounded text-sm hover:bg-gray-50">
                           {option.buttonText}
                         </button>
                       </div>
@@ -157,24 +177,26 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
             ))}
           </div>
 
+          {/* TAG SECTION */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">{labels.tagsSection}</h2>
+            <h2 className="text-lg font-semibold mb-2">{labels.tagsSection}</h2>
             <p className="text-sm text-gray-600 mb-3">{labels.tagsDescription}</p>
+
             <div className="flex flex-wrap gap-2">
               {labels.availableTags.map((tag: string) => (
                 <button
                   key={tag}
-                  onClick={() => {
-                    if (selectedTags.includes(tag)) {
-                      setSelectedTags(selectedTags.filter(t => t !== tag));
-                    } else {
-                      setSelectedTags([...selectedTags, tag]);
-                    }
-                  }}
-                  className={`px-3 py-1 text-sm rounded ${
+                  onClick={() =>
+                    setSelectedTags(
+                      selectedTags.includes(tag)
+                        ? selectedTags.filter((t) => t !== tag)
+                        : [...selectedTags, tag]
+                    )
+                  }
+                  className={`px-3 py-1 rounded text-sm ${
                     selectedTags.includes(tag)
-                      ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                      : 'bg-gray-100 text-gray-700 border border-gray-300'
+                      ? "bg-blue-100 text-blue-700 border border-blue-300"
+                      : "bg-gray-100 text-gray-700 border border-gray-300"
                   }`}
                 >
                   {tag}
@@ -183,20 +205,23 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
             </div>
           </div>
 
+          {/* ADVANCED OPTIONS */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-lg font-semibold text-gray-900 w-full"
+              className="flex items-center gap-2 text-lg font-semibold w-full"
             >
               {showAdvanced ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
               {labels.advancedOptions}
             </button>
+
             {showAdvanced && (
               <div className="mt-4 space-y-3">
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" className="mt-1" />
-                  <span className="text-sm text-gray-700">{labels.addAuthorsCheckbox}</span>
+                  <span className="text-sm">{labels.addAuthorsCheckbox}</span>
                 </label>
+
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -204,43 +229,47 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
                     onChange={(e) => setRestrictComments(e.target.checked)}
                     className="mt-1"
                   />
-                  <span className="text-sm text-gray-700">{labels.restrictCommentsCheckbox}</span>
+                  <span className="text-sm">{labels.restrictCommentsCheckbox}</span>
                 </label>
               </div>
             )}
           </div>
 
+          {/* BUTTONS */}
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <button
-                onClick={() => handlePublish('published')}
+                onClick={() => handlePublish("published")}
                 disabled={!title.trim() || isSubmitting}
-                className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
               >
                 {labels.publishButton}
               </button>
+
               <button
-                onClick={() => handlePublish('draft')}
+                onClick={() => handlePublish("draft")}
                 disabled={!title.trim() || isSubmitting}
-                className="bg-white text-gray-700 px-6 py-2 rounded border border-gray-300 hover:bg-gray-50"
+                className="bg-white text-gray-700 px-6 py-2 rounded border hover:bg-gray-50"
               >
                 {labels.saveDraftButton}
               </button>
+
               <button
                 onClick={onClose}
-                className="bg-white text-gray-700 px-6 py-2 rounded border border-gray-300 hover:bg-gray-50"
+                className="bg-white text-gray-700 px-6 py-2 rounded border hover:bg-gray-50"
               >
                 {labels.cancelButton}
               </button>
             </div>
 
-            <div className="flex items-center gap-1 text-red-700">
+            <div className="flex items-center gap-1 text-red-700 text-xs">
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
               </svg>
-              <span className="text-xs font-medium">{labels.restrictionMessage}</span>
+              {labels.restrictionMessage}
             </div>
           </div>
+
         </div>
       </div>
     </div>
