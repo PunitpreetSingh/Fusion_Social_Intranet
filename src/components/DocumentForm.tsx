@@ -33,7 +33,6 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
     setIsSubmitting(true);
     try {
       const payload = {
-        authorId: user.id,
         title: title,
         body: content,
         visibility: {
@@ -41,6 +40,7 @@ export function DocumentForm({ isOpen, onClose, user }: DocumentFormProps) {
           placeName: placeName,
         },
         tags: selectedTags,
+        createdBy: user.id,
       };
 
       console.log('Submitting to backend:', payload);

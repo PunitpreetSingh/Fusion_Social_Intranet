@@ -1,62 +1,34 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
-class ApiClient {
-  private baseUrl: string;
-  private backendAvailable: boolean | null = null;
+export async function apiFetch(path: string, options: RequestInit = {}) {
+  const url = `${API_BASE}${path}`;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
+  if (options.body) {
+    console.log('📦 Request Body:', JSON.parse(options.body as string));
   }
 
-  private async checkBackend(): Promise<boolean> {
-    if (this.backendAvailable !== null) {
-      return this.backendAvailable;
-    }
+  const config: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    },
+    ...options,
+  };
 
-    try {
-      const response = await fetch(`${this.baseUrl}/`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(2000)
-      });
-      this.backendAvailable = response.ok;
-      console.log(`🔌 Express backend ${this.backendAvailable ? 'available' : 'not available'}`);
-      return this.backendAvailable;
-    } catch (error) {
-      console.log('⚠️ Express backend not available, using Supabase REST API');
-      this.backendAvailable = false;
-      return false;
-    }
+  const res = await fetch(url, config);
+  const data = await res.json();
+
+  console.log(`✅ Response (${res.status}):`, data);
+
+  if (!res.ok) {
+    throw new Error(data.error || data.message || 'Request failed');
   }
 
-  private async supabaseInsert(table: string, data: any) {
-    const url = `${SUPABASE_URL}/rest/v1/${table}`;
+  return data;
+}
 
-    console.log(`🌐 Supabase Request: POST ${url}`);
-    console.log('📦 Request Body:', data);
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify(data)
-    });
-
-    const result = await response.json();
-    console.log(`✅ Supabase Response (${response.status}):`, result);
-
-    if (!response.ok) {
-      throw new Error(result.message || 'Supabase request failed');
-    }
-
-    return Array.isArray(result) ? result[0] : result;
-  }
-
+export const apiClient = {
   async createStatusUpdate(payload: {
     authorId: string;
     body: string;
@@ -64,224 +36,83 @@ class ApiClient {
     mentions?: string[];
     attachments?: string[];
   }) {
-    console.log('📝 Creating status update:', payload);
-
-    const backendReady = await this.checkBackend();
-
-    if (backendReady) {
-      try {
-        const response = await fetch(`${this.baseUrl}/api/content/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error('Backend request failed');
-        }
-
-        const data = await response.json();
-        console.log('✅ Response from Express:', data);
-        return data;
-      } catch (error) {
-        console.log('⚠️ Express failed, falling back to Supabase');
-        this.backendAvailable = false;
-      }
-    }
-
-    return this.supabaseInsert('status_updates', {
-      user_id: payload.authorId,
-      content: payload.body,
-      post_in: payload.postIn || '',
+    return apiFetch('/api/content/status', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
-  }
+  },
 
   async createDocument(payload: {
-    authorId: string;
     title: string;
     body: string;
-    visibility: {
-      type: string;
-      placeName?: string;
-      specificPeople?: string[];
-    };
+    visibility: any;
+    placeId?: string;
     tags?: string[];
-    mentions?: string[];
+    specificPeople?: string[];
     attachments?: string[];
+    mentions?: string[];
+    createdBy: string;
   }) {
-    console.log('📄 Creating document:', payload);
-
-    const backendReady = await this.checkBackend();
-
-    if (backendReady) {
-      try {
-        const response = await fetch(`${this.baseUrl}/api/content/document`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error('Backend request failed');
-        }
-
-        const data = await response.json();
-        console.log('✅ Response from Express:', data);
-        return data;
-      } catch (error) {
-        console.log('⚠️ Express failed, falling back to Supabase');
-        this.backendAvailable = false;
-      }
-    }
-
-    return this.supabaseInsert('documents', {
-      user_id: payload.authorId,
-      title: payload.title,
-      content: payload.body,
-      visibility_type: payload.visibility.type,
-      place_name: payload.visibility.placeName || '',
-      tags: payload.tags || [],
-      status: 'published',
+    return apiFetch('/api/content/document', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
-  }
+  },
 
   async createBlogPost(payload: {
-    authorId: string;
     title: string;
     body: string;
     blogFor?: string;
-    visibility?: {
-      type: string;
-      placeName?: string;
-    };
     tags?: string[];
-    mentions?: string[];
     attachments?: string[];
+    authorId: string;
   }) {
-    console.log('📰 Creating blog post:', payload);
-
-    const backendReady = await this.checkBackend();
-
-    if (backendReady) {
-      try {
-        const response = await fetch(`${this.baseUrl}/api/content/blog`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error('Backend request failed');
-        }
-
-        const data = await response.json();
-        console.log('✅ Response from Express:', data);
-        return data;
-      } catch (error) {
-        console.log('⚠️ Express failed, falling back to Supabase');
-        this.backendAvailable = false;
-      }
-    }
-
-    return this.supabaseInsert('blog_posts', {
-      user_id: payload.authorId,
-      title: payload.title,
-      content: payload.body,
-      blog_name: payload.blogFor || 'Personal Blog',
-      visibility_type: payload.visibility?.type || 'personal_blog',
-      place_name: payload.visibility?.placeName || '',
-      tags: payload.tags || [],
-      status: 'published',
+    return apiFetch('/api/content/blog', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
-  }
+  },
 
   async createSpace(payload: {
     name: string;
+    description?: string;
     createdBy: string;
-    parent_place?: string;
   }) {
-    console.log('🏢 Creating space:', payload);
-
-    const backendReady = await this.checkBackend();
-
-    if (backendReady) {
-      try {
-        const response = await fetch(`${this.baseUrl}/api/spaces`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error('Backend request failed');
-        }
-
-        const data = await response.json();
-        console.log('✅ Response from Express:', data);
-        return data;
-      } catch (error) {
-        console.log('⚠️ Express failed, falling back to Supabase');
-        this.backendAvailable = false;
-      }
-    }
-
-    return this.supabaseInsert('spaces', {
-      name: payload.name,
-      user_id: payload.createdBy,
-      parent_place: payload.parent_place || '',
+    return apiFetch('/api/spaces', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
-  }
+  },
 
-  async getUsers(query?: string) {
-    const backendReady = await this.checkBackend();
+  async searchUsers(query: string) {
+    return apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+  },
 
-    if (backendReady) {
-      try {
-        const endpoint = query ? `/api/users?query=${encodeURIComponent(query)}` : '/api/users';
-        const response = await fetch(`${this.baseUrl}${endpoint}`);
-        if (response.ok) {
-          return await response.json();
-        }
-      } catch (error) {
-        this.backendAvailable = false;
-      }
+  async searchSpaces(query: string) {
+    return apiFetch(`/api/spaces/search?q=${encodeURIComponent(query)}`);
+  },
+
+  async uploadFile(file: File, contentType: string, contentId?: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('contentType', contentType);
+    if (contentId) {
+      formData.append('contentId', contentId);
     }
 
-    const url = `${SUPABASE_URL}/rest/v1/users${query ? `?name=ilike.*${query}*` : ''}`;
+    const url = `${API_BASE}/api/uploads`;
     const response = await fetch(url, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-      }
+      method: 'POST',
+      body: formData,
     });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
     return await response.json();
   }
+};
 
-  async getSpaces(query?: string) {
-    const backendReady = await this.checkBackend();
-
-    if (backendReady) {
-      try {
-        const endpoint = query ? `/api/spaces?query=${encodeURIComponent(query)}` : '/api/spaces';
-        const response = await fetch(`${this.baseUrl}${endpoint}`);
-        if (response.ok) {
-          return await response.json();
-        }
-      } catch (error) {
-        this.backendAvailable = false;
-      }
-    }
-
-    const url = `${SUPABASE_URL}/rest/v1/spaces${query ? `?name=ilike.*${query}*` : ''}`;
-    const response = await fetch(url, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-      }
-    });
-    return await response.json();
-  }
-}
-
-export const apiClient = new ApiClient(API_BASE);
 export default apiClient;
