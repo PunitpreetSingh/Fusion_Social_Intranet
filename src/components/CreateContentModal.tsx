@@ -31,7 +31,9 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
     }
 
     onClose();
-    openModal(itemId, { user });
+    setTimeout(() => {
+      openModal(itemId, { user });
+    }, 100);
   };
 
   if (!isOpen || !menuConfig) return null;
@@ -39,10 +41,10 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
   return (
     <>
       <div
-        className="fixed inset-0 z-50 bg-black bg-opacity-30 transition-opacity duration-200"
+        className="fixed inset-0 z-40 bg-black bg-opacity-30 transition-opacity duration-200"
         onClick={onClose}
       />
-      <div className="fixed top-16 right-4 z-50 animate-slideInRight">
+      <div className="fixed top-16 right-4 z-41 animate-slideInRight" onClick={(e) => e.stopPropagation()}>
         <div className="bg-white rounded-lg shadow-2xl w-80 max-h-[calc(100vh-5rem)] overflow-y-auto">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
@@ -113,29 +115,45 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
         </div>
       </div>
 
-      <StatusUpdateModal
-        isOpen={isModalOpen('status_update')}
-        onClose={onClose}
-        user={user}
-      />
+      {isModalOpen('status_update') && (
+        <StatusUpdateModal
+          isOpen={true}
+          onClose={() => {
+            openModal('menu', { user });
+          }}
+          user={user}
+        />
+      )}
 
-      <DocumentForm
-        isOpen={isModalOpen('document')}
-        onClose={onClose}
-        user={user}
-      />
+      {isModalOpen('document') && (
+        <DocumentForm
+          isOpen={true}
+          onClose={() => {
+            openModal('menu', { user });
+          }}
+          user={user}
+        />
+      )}
 
-      <BlogPostForm
-        isOpen={isModalOpen('blog_post')}
-        onClose={onClose}
-        user={user}
-      />
+      {isModalOpen('blog_post') && (
+        <BlogPostForm
+          isOpen={true}
+          onClose={() => {
+            openModal('menu', { user });
+          }}
+          user={user}
+        />
+      )}
 
-      <CreateSpaceForm
-        isOpen={isModalOpen('space')}
-        onClose={onClose}
-        user={user}
-      />
+      {isModalOpen('space') && (
+        <CreateSpaceForm
+          isOpen={true}
+          onClose={() => {
+            openModal('menu', { user });
+          }}
+          user={user}
+        />
+      )}
 
       <style>{`
         @keyframes slideInRight {

@@ -1,10 +1,9 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
 
 interface ModalContextType {
   currentModal: string | null;
   modalData: any;
-  openModal: (modalName: string, data?: any, pushRoute?: boolean) => void;
+  openModal: (modalName: string, data?: any) => void;
   closeModal: () => void;
   isOpen: (modalName: string) => boolean;
 }
@@ -14,51 +13,24 @@ const ModalContext = createContext<ModalContextType | undefined>(undefined);
 export function ModalProvider({ children }: { children: ReactNode }) {
   const [currentModal, setCurrentModal] = useState<string | null>(null);
   const [modalData, setModalData] = useState<any>(null);
-  const [routePushed, setRoutePushed] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const isOpeningRef = useRef(false);
 
-  useEffect(() => {
-    const path = location.pathname;
-    if (path.startsWith('/create/')) {
-      const modalName = path.replace('/create/', '');
-      if (modalName && currentModal !== modalName) {
-        setCurrentModal(modalName);
-        setRoutePushed(false);
-      }
-    } else if (path === '/create') {
-      if (currentModal !== 'menu') {
-        setCurrentModal('menu');
-        setRoutePushed(false);
-      }
-    }
-  }, [location.pathname]);
+  const openModal = useCallback((modalName: string, data?: any) => {
+    if (isOpeningRef.current || currentModal === modalName) return;
 
-  const openModal = useCallback((modalName: string, data?: any, pushRoute = true) => {
+    isOpeningRef.current = true;
     setCurrentModal(modalName);
     setModalData(data || null);
-    setRoutePushed(pushRoute);
 
-    if (pushRoute) {
-      if (modalName === 'menu') {
-        navigate('/create', { replace: false });
-      } else {
-        navigate(`/create/${modalName}`, { replace: false });
-      }
-    }
-  }, [navigate]);
+    setTimeout(() => {
+      isOpeningRef.current = false;
+    }, 300);
+  }, [currentModal]);
 
   const closeModal = useCallback(() => {
     setCurrentModal(null);
     setModalData(null);
-
-    if (routePushed) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
-    setRoutePushed(false);
-  }, [routePushed, navigate]);
+  }, []);
 
   const isOpen = useCallback((modalName: string) => {
     return currentModal === modalName;

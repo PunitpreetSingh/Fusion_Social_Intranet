@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Bold, Italic, Link as LinkIcon, AtSign, Image as ImageIcon, Paperclip, List, ListOrdered, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { useRef, useCallback } from 'react';
+import { Bold, Italic, Link as LinkIcon, AtSign, Image as ImageIcon, Paperclip, List, ListOrdered } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface RichTextEditorProps {
@@ -19,42 +19,62 @@ export function RichTextEditor({
   onAttachClick,
   showAttachButton = false
 }: RichTextEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
 
-  const handleFormat = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
-  };
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+  }, [onChange]);
 
-  const handleLink = () => {
+  const insertText = useCallback((text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentValue = textarea.value;
+    const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
+
+    onChange(newValue);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + text.length, start + text.length);
+    }, 0);
+  }, [onChange]);
+
+  const handleBold = useCallback(() => {
+    insertText('**bold text**');
+  }, [insertText]);
+
+  const handleItalic = useCallback(() => {
+    insertText('*italic text*');
+  }, [insertText]);
+
+  const handleLink = useCallback(() => {
     const url = prompt('Enter URL:');
     if (url) {
-      const selection = window.getSelection();
-      const text = selection?.toString() || url;
-      document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${text}</a>`);
+      insertText(`[link text](${url})`);
     }
-    editorRef.current?.focus();
-  };
+  }, [insertText]);
 
-  const handleMention = () => {
+  const handleMention = useCallback(() => {
     if (onMentionClick) {
       onMentionClick();
     } else {
       const mention = prompt('Enter name to mention:');
       if (mention) {
-        document.execCommand('insertHTML', false, `<span class="text-blue-600 font-semibold">@${mention}</span>&nbsp;`);
+        insertText(`@${mention} `);
       }
-      editorRef.current?.focus();
     }
-  };
+  }, [onMentionClick, insertText]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
+    insertText('[Uploading image...]');
+
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -67,71 +87,53 @@ export function RichTextEditor({
           upsert: false
         });
 
-      if (uploadError) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = `<img src="${event.target?.result}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
-          document.execCommand('insertHTML', false, img);
-          onChange(editorRef.current?.innerHTML || '');
-        };
-        reader.readAsDataURL(file);
-        return;
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage
+          .from('attachments')
+          .getPublicUrl(filePath);
+
+        const newValue = value.replace('[Uploading image...]', `![Image](${urlData.publicUrl})`);
+        onChange(newValue);
       }
-
-      const { data: urlData } = supabase.storage
-        .from('attachments')
-        .getPublicUrl(filePath);
-
-      const img = `<img src="${urlData.publicUrl}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
-      document.execCommand('insertHTML', false, img);
-      onChange(editorRef.current?.innerHTML || '');
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Failed to upload image');
-    } finally {
-      setUploading(false);
     }
-  };
+  }, [value, onChange, insertText]);
 
-  const handleInput = () => {
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-    }
-  };
+  const handleList = useCallback(() => {
+    insertText('\n- List item\n');
+  }, [insertText]);
+
+  const handleOrderedList = useCallback(() => {
+    insertText('\n1. List item\n');
+  }, [insertText]);
 
   return (
     <div className="border border-gray-300 rounded-lg overflow-hidden transition-all duration-200 hover:border-gray-400 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
       <div className="flex items-center gap-1 p-2 bg-gray-50 border-b border-gray-300 flex-wrap">
         <button
           type="button"
-          onClick={() => handleFormat('bold')}
+          onClick={handleBold}
           className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Bold (Ctrl+B)"
+          title="Bold"
         >
           <Bold size={18} className="text-gray-700" />
         </button>
         <button
           type="button"
-          onClick={() => handleFormat('italic')}
+          onClick={handleItalic}
           className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Italic (Ctrl+I)"
+          title="Italic"
         >
           <Italic size={18} className="text-gray-700" />
-        </button>
-        <button
-          type="button"
-          onClick={() => handleFormat('underline')}
-          className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Underline (Ctrl+U)"
-        >
-          <span className="text-gray-700 font-semibold text-sm underline">U</span>
         </button>
 
         <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
         <button
           type="button"
-          onClick={() => handleFormat('insertUnorderedList')}
+          onClick={handleList}
           className="p-2 hover:bg-gray-200 rounded transition-colors"
           title="Bullet List"
         >
@@ -139,38 +141,11 @@ export function RichTextEditor({
         </button>
         <button
           type="button"
-          onClick={() => handleFormat('insertOrderedList')}
+          onClick={handleOrderedList}
           className="p-2 hover:bg-gray-200 rounded transition-colors"
           title="Numbered List"
         >
           <ListOrdered size={18} className="text-gray-700" />
-        </button>
-
-        <div className="w-px h-6 bg-gray-300 mx-1"></div>
-
-        <button
-          type="button"
-          onClick={() => handleFormat('justifyLeft')}
-          className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Align Left"
-        >
-          <AlignLeft size={18} className="text-gray-700" />
-        </button>
-        <button
-          type="button"
-          onClick={() => handleFormat('justifyCenter')}
-          className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Align Center"
-        >
-          <AlignCenter size={18} className="text-gray-700" />
-        </button>
-        <button
-          type="button"
-          onClick={() => handleFormat('justifyRight')}
-          className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Align Right"
-        >
-          <AlignRight size={18} className="text-gray-700" />
         </button>
 
         <div className="w-px h-6 bg-gray-300 mx-1"></div>
@@ -194,8 +169,7 @@ export function RichTextEditor({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="p-2 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
           title="Upload Image"
         >
           <ImageIcon size={18} className="text-gray-700" />
@@ -219,37 +193,14 @@ export function RichTextEditor({
           onChange={handleImageUpload}
           className="hidden"
         />
-
-        {uploading && (
-          <span className="text-xs text-gray-500 ml-2">Uploading...</span>
-        )}
       </div>
-      <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-        className="p-4 min-h-[150px] max-h-[400px] overflow-y-auto focus:outline-none prose prose-sm max-w-none"
-        data-placeholder={placeholder}
-        suppressContentEditableWarning
-        dangerouslySetInnerHTML={{ __html: value }}
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="w-full p-4 min-h-[150px] max-h-[400px] resize-none focus:outline-none"
       />
-      <style>{`
-        [contenteditable]:empty:before {
-          content: attr(data-placeholder);
-          color: #9CA3AF;
-          pointer-events: none;
-        }
-        [contenteditable] a {
-          color: #2563eb;
-          text-decoration: underline;
-        }
-        [contenteditable] img {
-          max-width: 100%;
-          height: auto;
-          margin: 10px 0;
-          border-radius: 4px;
-        }
-      `}</style>
     </div>
   );
 }

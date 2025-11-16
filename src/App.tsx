@@ -6,14 +6,15 @@ import { CreateContentModal } from './components/CreateContentModal';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { useConfiguration } from './hooks/useConfiguration';
 import { useUser } from './hooks/useUser';
+import { useModal } from './contexts/ModalContext';
 
 function App() {
   const { config, loading: configLoading } = useConfiguration();
   const { user, loading: userLoading } = useUser();
+  const { openModal, closeModal, isOpen } = useModal();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAppSearchModalOpen, setIsAppSearchModalOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isGlobalSearchModalOpen, setIsGlobalSearchModalOpen] = useState(false);
 
   const handleNotificationsClick = () => {
@@ -26,7 +27,7 @@ function App() {
         onPeopleClick={() => setIsProfileModalOpen(true)}
         onNotificationsClick={handleNotificationsClick}
         onAppsClick={() => setIsAppSearchModalOpen(true)}
-        onCreateClick={() => setIsCreateModalOpen(true)}
+        onCreateClick={() => openModal('menu', { user })}
         onSearchClick={() => setIsGlobalSearchModalOpen(true)}
       />
 
@@ -54,8 +55,8 @@ function App() {
         )}
 
         <CreateContentModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
+          isOpen={isOpen('menu')}
+          onClose={closeModal}
           user={user}
         />
       </>
