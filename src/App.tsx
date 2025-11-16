@@ -98,7 +98,7 @@ function App() {
         />
       )}
 
-      <DatabaseTest />
+      {/* <DatabaseTest /> */}
     </div>
   );
 }

@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ onPeopleClick, onNotificationsClick, onAppsClick, onCreateClick, onSearchClick }: HeaderProps) {
-  const [labels, setLabels] = useState({ appName: 'Social Intranet', centerText: 'DAIMLER TRUCK' });
+  const [labels, setLabels] = useState({ appName: 'Social Intranet', centerText: 'DAIMLER TRUCK ASIA' });
 
   useEffect(() => {
     fetch('/uiLabels.json')
