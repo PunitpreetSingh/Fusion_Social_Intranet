@@ -7,12 +7,44 @@ const pool = new Pool({
 });
 
 pool.on('connect', () => {
-  console.log('Database connected successfully');
+  console.log('✅ PostgreSQL database connected successfully');
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected database error:', err);
+  console.error('❌ Unexpected database error:', err);
   process.exit(-1);
 });
 
-module.exports = pool;
+// Helper function to execute queries
+const query = async (text, params) => {
+  const start = Date.now();
+  try {
+    const res = await pool.query(text, params);
+    const duration = Date.now() - start;
+    console.log('✓ Query executed', { duration: `${duration}ms`, rows: res.rowCount });
+    return res;
+  } catch (error) {
+    console.error('❌ Database query error:', error);
+    throw error;
+  }
+};
+
+// Test database connection
+const testConnection = async () => {
+  try {
+    const result = await query('SELECT NOW() as now, current_database() as db');
+    console.log('✅ Database connection test successful');
+    console.log(`   Database: ${result.rows[0].db}`);
+    console.log(`   Time: ${result.rows[0].now}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Database connection test failed:', error.message);
+    return false;
+  }
+};
+
+module.exports = {
+  pool,
+  query,
+  testConnection
+};
