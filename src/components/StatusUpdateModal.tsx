@@ -3,7 +3,7 @@ import { User } from '../types';
 import { useState, useEffect } from 'react';
 import { RichTextEditor } from './RichTextEditor';
 import { PlaceSearch } from './PlaceSearch';
-import apiClient from '../api/client';
+import { apiFetch } from '../api/client';
 
 interface StatusUpdateModalProps {
   isOpen: boolean;
@@ -32,7 +32,9 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
       .catch(() => {});
   }, []);
 
-  const handlePost = async () => {
+  const handlePost = async (e?: any) => {
+    e?.preventDefault();
+
     if (!content.trim() || !user) return;
 
     if (user.role !== 'internal' && user.role !== 'admin') {
@@ -41,36 +43,41 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
     }
 
     setIsSubmitting(true);
+
     try {
-      console.log('Submitting to backend:', {
+      const payload = {
         authorId: user.id,
         body: content,
         postIn: postIn,
+        mentions: [],
+        attachments: []
+      };
+
+      console.log("Submitting payload:", payload);
+
+      const response = await apiFetch("/api/content/status", {
+        method: "POST",
+        body: JSON.stringify(payload),
       });
 
-      const response = await apiClient.createStatusUpdate({
-        authorId: user.id,
-        body: content,
-        postIn: postIn,
-      });
+      console.log("Backend response:", response);
 
-      console.log('Response:', response);
+      alert("✅ Status update posted!");
 
-      alert('✅ Status update posted successfully!');
-      setContent('');
-      setPostIn('');
+      setContent("");
+      setPostIn("");
       onClose();
     } catch (error: any) {
-      console.error('Error posting status update:', error);
-      alert(`❌ Failed to post status update: ${error.message}`);
+      console.error("Failed to post status update:", error);
+      alert(`❌ Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCancel = () => {
-    setContent('');
-    setPostIn('');
+    setContent("");
+    setPostIn("");
     onClose();
   };
 
@@ -79,33 +86,27 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50"
-        style={{ zIndex: 999 }}
+        className="fixed inset-0 bg-black bg-opacity-50 z-[999]"
         onClick={onClose}
       />
-      <div
-        className="fixed inset-0 flex items-center justify-center pointer-events-none"
-        style={{ zIndex: 1000 }}
-        role="dialog"
-        aria-modal="true"
-      >
-        <div className="bg-white rounded shadow-xl w-full max-w-2xl m-4 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[1000]" role="dialog" aria-modal="true">
+        <div
+          className="bg-white rounded shadow-xl w-full max-w-2xl m-4 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-base font-semibold text-gray-900">{labels.title}</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Close"
-            >
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
               <X size={20} />
             </button>
           </div>
 
           <div className="p-6">
             <div className="flex gap-3 mb-4">
-              <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
                 {user?.profile_image_url ? (
-                  <img src={user.profile_image_url} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  <img src={user.profile_image_url} className="w-full h-full rounded-full object-cover" />
                 ) : (
                   <svg viewBox="0 0 24 24" className="w-6 h-6 text-gray-500" fill="currentColor">
                     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -123,48 +124,46 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
             </div>
 
             <div className="mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <label className="text-sm font-medium text-gray-700">{labels.postInLabel}:</label>
-                <div className="flex-1 flex gap-2">
-                  <input
-                    type="text"
-                    value={postIn}
-                    onChange={(e) => setPostIn(e.target.value)}
-                    placeholder={labels.postInPlaceholder}
-                    className="flex-1 border-b border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                  <button
-                    onClick={() => setShowPlaceSearch(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                  >
-                    Browse
-                  </button>
-                </div>
+              <label className="text-sm font-medium text-gray-700">{labels.postInLabel}:</label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  value={postIn}
+                  onChange={(e) => setPostIn(e.target.value)}
+                  placeholder={labels.postInPlaceholder}
+                  className="flex-1 border-b border-gray-300 px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={() => setShowPlaceSearch(true)}
+                  className="text-blue-600 text-sm font-medium"
+                >
+                  Browse
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
               <div className="flex gap-2">
                 <button
                   onClick={handlePost}
                   disabled={!content.trim() || isSubmitting}
-                  className="bg-black text-white px-6 py-2 text-sm rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  className="bg-black text-white px-6 py-2 text-sm rounded hover:bg-gray-800 disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Posting...' : labels.postButton}
+                  {isSubmitting ? "Posting..." : labels.postButton}
                 </button>
+
                 <button
                   onClick={handleCancel}
-                  className="bg-white text-gray-700 px-6 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="bg-white text-gray-700 px-6 py-2 text-sm rounded border"
                 >
                   {labels.cancelButton}
                 </button>
               </div>
 
-              <div className="flex items-center gap-1 text-red-700">
+              <div className="flex items-center gap-1 text-red-700 text-xs">
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
-                <span className="text-xs font-medium">{labels.restrictionMessage}</span>
+                {labels.restrictionMessage}
               </div>
             </div>
           </div>
@@ -179,29 +178,6 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
           setShowPlaceSearch(false);
         }}
       />
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-20px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-        .animate-slideIn {
-          animation: slideIn 0.3s ease-out;
-        }
-      `}</style>
     </>
   );
 }
