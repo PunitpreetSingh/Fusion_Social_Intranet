@@ -4,6 +4,10 @@ import { ProfileModal } from './components/ProfileModal';
 import { AppSearchModal } from './components/AppSearchModal';
 import { CreateContentModal } from './components/CreateContentModal';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
+import { StatusUpdateModal } from './components/StatusUpdateModal';
+import { DocumentForm } from './components/DocumentForm';
+import { BlogPostForm } from './components/BlogPostForm';
+import { CreateSpaceForm } from './components/CreateSpaceForm';
 import { useConfiguration } from './hooks/useConfiguration';
 import { useUser } from './hooks/useUser';
 import { useModal } from './contexts/ModalContext';
@@ -60,6 +64,38 @@ function App() {
           user={user}
         />
       </>
+
+      {isOpen('status_update') && (
+        <StatusUpdateModal
+          isOpen={true}
+          onClose={closeModal}
+          user={user}
+        />
+      )}
+
+      {isOpen('document') && (
+        <DocumentForm
+          isOpen={true}
+          onClose={closeModal}
+          user={user}
+        />
+      )}
+
+      {isOpen('blog_post') && (
+        <BlogPostForm
+          isOpen={true}
+          onClose={closeModal}
+          user={user}
+        />
+      )}
+
+      {isOpen('space') && (
+        <CreateSpaceForm
+          isOpen={true}
+          onClose={closeModal}
+          user={user}
+        />
+      )}
     </div>
   );
 }

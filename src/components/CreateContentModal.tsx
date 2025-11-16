@@ -2,10 +2,6 @@ import { User } from '../types';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useModal } from '../contexts/ModalContext';
-import { StatusUpdateModal } from './StatusUpdateModal';
-import { DocumentForm } from './DocumentForm';
-import { BlogPostForm } from './BlogPostForm';
-import { CreateSpaceForm } from './CreateSpaceForm';
 
 interface CreateContentModalProps {
   isOpen: boolean;
@@ -14,7 +10,7 @@ interface CreateContentModalProps {
 }
 
 export function CreateContentModal({ isOpen, onClose, user }: CreateContentModalProps) {
-  const { openModal, closeModal, isOpen: isModalOpen } = useModal();
+  const { openModal } = useModal();
   const [menuConfig, setMenuConfig] = useState<any>(null);
 
   useEffect(() => {
@@ -116,38 +112,6 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
           </div>
         </div>
       </div>
-
-      {isModalOpen('status_update') && (
-        <StatusUpdateModal
-          isOpen={true}
-          onClose={closeModal}
-          user={user}
-        />
-      )}
-
-      {isModalOpen('document') && (
-        <DocumentForm
-          isOpen={true}
-          onClose={closeModal}
-          user={user}
-        />
-      )}
-
-      {isModalOpen('blog_post') && (
-        <BlogPostForm
-          isOpen={true}
-          onClose={closeModal}
-          user={user}
-        />
-      )}
-
-      {isModalOpen('space') && (
-        <CreateSpaceForm
-          isOpen={true}
-          onClose={closeModal}
-          user={user}
-        />
-      )}
 
       <style>{`
         @keyframes slideInRight {
