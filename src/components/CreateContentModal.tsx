@@ -14,7 +14,7 @@ interface CreateContentModalProps {
 }
 
 export function CreateContentModal({ isOpen, onClose, user }: CreateContentModalProps) {
-  const { openModal, isOpen: isModalOpen } = useModal();
+  const { openModal, closeModal, isOpen: isModalOpen } = useModal();
   const [menuConfig, setMenuConfig] = useState<any>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
     onClose();
     setTimeout(() => {
       openModal(itemId, { user });
-    }, 100);
+    }, 150);
   };
 
   if (!isOpen || !menuConfig) return null;
@@ -41,10 +41,15 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black bg-opacity-30 transition-opacity duration-200"
+        className="fixed inset-0 bg-black bg-opacity-30"
+        style={{ zIndex: 998 }}
         onClick={onClose}
       />
-      <div className="fixed top-16 right-4 z-41 animate-slideInRight" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fixed top-16 right-4 animate-slideInRight"
+        style={{ zIndex: 999 }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="bg-white rounded-lg shadow-2xl w-80 max-h-[calc(100vh-5rem)] overflow-y-auto">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
@@ -118,9 +123,7 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
       {isModalOpen('status_update') && (
         <StatusUpdateModal
           isOpen={true}
-          onClose={() => {
-            openModal('menu', { user });
-          }}
+          onClose={closeModal}
           user={user}
         />
       )}
@@ -128,9 +131,7 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
       {isModalOpen('document') && (
         <DocumentForm
           isOpen={true}
-          onClose={() => {
-            openModal('menu', { user });
-          }}
+          onClose={closeModal}
           user={user}
         />
       )}
@@ -138,9 +139,7 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
       {isModalOpen('blog_post') && (
         <BlogPostForm
           isOpen={true}
-          onClose={() => {
-            openModal('menu', { user });
-          }}
+          onClose={closeModal}
           user={user}
         />
       )}
@@ -148,9 +147,7 @@ export function CreateContentModal({ isOpen, onClose, user }: CreateContentModal
       {isModalOpen('space') && (
         <CreateSpaceForm
           isOpen={true}
-          onClose={() => {
-            openModal('menu', { user });
-          }}
+          onClose={closeModal}
           user={user}
         />
       )}

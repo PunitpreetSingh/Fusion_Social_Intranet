@@ -1,4 +1,9 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+
+interface ModalState {
+  name: string | null;
+  payload: any;
+}
 
 interface ModalContextType {
   currentModal: string | null;
@@ -11,33 +16,30 @@ interface ModalContextType {
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
 export function ModalProvider({ children }: { children: ReactNode }) {
-  const [currentModal, setCurrentModal] = useState<string | null>(null);
-  const [modalData, setModalData] = useState<any>(null);
-  const isOpeningRef = useRef(false);
+  const [modalState, setModalState] = useState<ModalState>({ name: null, payload: null });
 
   const openModal = useCallback((modalName: string, data?: any) => {
-    if (isOpeningRef.current || currentModal === modalName) return;
-
-    isOpeningRef.current = true;
-    setCurrentModal(modalName);
-    setModalData(data || null);
-
-    setTimeout(() => {
-      isOpeningRef.current = false;
-    }, 300);
-  }, [currentModal]);
+    setModalState({ name: modalName, payload: data || null });
+  }, []);
 
   const closeModal = useCallback(() => {
-    setCurrentModal(null);
-    setModalData(null);
+    setModalState({ name: null, payload: null });
   }, []);
 
   const isOpen = useCallback((modalName: string) => {
-    return currentModal === modalName;
-  }, [currentModal]);
+    return modalState.name === modalName;
+  }, [modalState.name]);
 
   return (
-    <ModalContext.Provider value={{ currentModal, modalData, openModal, closeModal, isOpen }}>
+    <ModalContext.Provider
+      value={{
+        currentModal: modalState.name,
+        modalData: modalState.payload,
+        openModal,
+        closeModal,
+        isOpen
+      }}
+    >
       {children}
     </ModalContext.Provider>
   );

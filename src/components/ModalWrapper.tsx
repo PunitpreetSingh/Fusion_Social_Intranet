@@ -53,29 +53,34 @@ export function ModalWrapper({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
-      onClick={closeOnBackdrop ? onClose : undefined}
-      role="dialog"
-      aria-modal="true"
-      style={{ animation: 'fadeIn 0.2s ease-in-out' }}
-    >
+    <>
       <div
-        className={`bg-white rounded-lg shadow-2xl ${sizeClasses[size]} ${className} transition-transform duration-300 ease-out transform`}
-        onClick={(e) => e.stopPropagation()}
-        style={{ animation: 'slideIn 0.3s ease-out' }}
+        className="fixed inset-0 bg-black bg-opacity-50"
+        style={{ zIndex: 999 }}
+        onClick={closeOnBackdrop ? onClose : undefined}
+      />
+      <div
+        className="fixed inset-0 flex items-center justify-center pointer-events-none"
+        style={{ zIndex: 1000 }}
+        role="dialog"
+        aria-modal="true"
       >
-        {showCloseButton && (
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
-            aria-label="Close"
-          >
-            <X size={24} />
-          </button>
-        )}
-        {children}
+        <div
+          className={`bg-white rounded-lg shadow-2xl ${sizeClasses[size]} ${className} pointer-events-auto relative m-4`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {showCloseButton && (
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+              aria-label="Close"
+            >
+              <X size={24} />
+            </button>
+          )}
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
