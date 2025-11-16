@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Intranet API Tester</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 16px;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: #f5f5f5;
+      padding: 15px 20px;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-header:hover {
+      background: #eeeeee;
+    }
+
+    .section-header h2 {
+      font-size: 20px;
+      color: #333;
+    }
+
+    .section-body {
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 6px;
+      background: #f9f9f9;
+      border-left: 4px solid #667eea;
+    }
+
+    .result.success {
+      background: #e8f5e9;
+      border-left-color: #4caf50;
+    }
+
+    .result.error {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .result-content {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #555;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .badge.get { background: #e3f2fd; color: #1976d2; }
+    .badge.post { background: #e8f5e9; color: #388e3c; }
+    .badge.put { background: #fff3e0; color: #f57c00; }
+    .badge.delete { background: #ffebee; color: #d32f2f; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 Social Intranet API Tester</h1>
+      <p>Test all backend endpoints with live data</p>
+    </div>
+
+    <div class="content">
+      <!-- Get All Users -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Get All Users <span class="badge get">GET</span></h2>
+        </div>
+        <div class="section-body">
+          <button onclick="getAllUsers()">Fetch Users</button>
+          <div id="users-result"></div>
+        </div>
+      </div>
+
+      <!-- Create Status Update -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Create Status Update <span class="badge post">POST</span></h2>
+        </div>
+        <div class="section-body">
+          <div class="form-group">
+            <label>Content (Rich Text HTML):</label>
+            <textarea id="status-content" placeholder="<p>Working on new features...</p>"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Post In (Space Name):</label>
+            <input type="text" id="status-postin" placeholder="Engineering" />
+          </div>
+          <button onclick="createStatus()">Post Status</button>
+          <div id="status-result"></div>
+        </div>
+      </div>
+
+      <!-- Get Status Updates -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Get Status Updates <span class="badge get">GET</span></h2>
+        </div>
+        <div class="section-body">
+          <button onclick="getStatuses()">Fetch Status Updates</button>
+          <div id="get-status-result"></div>
+        </div>
+      </div>
+
+      <!-- Create Document -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Create Document <span class="badge post">POST</span></h2>
+        </div>
+        <div class="section-body">
+          <div class="grid">
+            <div class="form-group">
+              <label>Title:</label>
+              <input type="text" id="doc-title" placeholder="Technical Specification" />
+            </div>
+            <div class="form-group">
+              <label>Visibility:</label>
+              <select id="doc-visibility">
+                <option value="place">Place</option>
+                <option value="hidden">Hidden</option>
+                <option value="specific_people">Specific People</option>
+                <option value="community">Community</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Content:</label>
+            <textarea id="doc-content" placeholder="Document content here..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Place Name (if visibility = place):</label>
+            <input type="text" id="doc-place" placeholder="Engineering" />
+          </div>
+          <div class="form-group">
+            <label>Tags (comma-separated):</label>
+            <input type="text" id="doc-tags" placeholder="technical, documentation" />
+          </div>
+          <div class="form-group">
+            <label>Status:</label>
+            <select id="doc-status">
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
+          <button onclick="createDocument()">Create Document</button>
+          <div id="doc-result"></div>
+        </div>
+      </div>
+
+      <!-- Get Documents -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Get Published Documents <span class="badge get">GET</span></h2>
+        </div>
+        <div class="section-body">
+          <button onclick="getDocuments()">Fetch Documents</button>
+          <div id="get-doc-result"></div>
+        </div>
+      </div>
+
+      <!-- Create Blog Post -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Create Blog Post <span class="badge post">POST</span></h2>
+        </div>
+        <div class="section-body">
+          <div class="grid">
+            <div class="form-group">
+              <label>Title:</label>
+              <input type="text" id="blog-title" placeholder="My First Blog Post" />
+            </div>
+            <div class="form-group">
+              <label>Visibility:</label>
+              <select id="blog-visibility">
+                <option value="personal_blog">Personal Blog</option>
+                <option value="place">Place</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Content:</label>
+            <textarea id="blog-content" placeholder="Blog content here..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Blog Name (for personal blog):</label>
+            <input type="text" id="blog-name" placeholder="John's Blog" />
+          </div>
+          <div class="form-group">
+            <label>Place Name (for place visibility):</label>
+            <input type="text" id="blog-place" placeholder="Engineering" />
+          </div>
+          <div class="form-group">
+            <label>Tags (comma-separated):</label>
+            <input type="text" id="blog-tags" placeholder="technology, updates" />
+          </div>
+          <button onclick="createBlog()">Create Blog Post</button>
+          <div id="blog-result"></div>
+        </div>
+      </div>
+
+      <!-- Get Blog Posts -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Get Blog Posts <span class="badge get">GET</span></h2>
+        </div>
+        <div class="section-body">
+          <button onclick="getBlogs()">Fetch Blog Posts</button>
+          <div id="get-blog-result"></div>
+        </div>
+      </div>
+
+      <!-- Create Space -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Create Space <span class="badge post">POST</span></h2>
+        </div>
+        <div class="section-body">
+          <div class="form-group">
+            <label>Space Name:</label>
+            <input type="text" id="space-name" placeholder="New Team Space" />
+          </div>
+          <div class="form-group">
+            <label>Parent Place:</label>
+            <input type="text" id="space-parent" placeholder="HQ" />
+          </div>
+          <button onclick="createSpace()">Create Space</button>
+          <div id="space-result"></div>
+        </div>
+      </div>
+
+      <!-- Get All Spaces -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Get All Spaces <span class="badge get">GET</span></h2>
+        </div>
+        <div class="section-body">
+          <button onclick="getSpaces()">Fetch Spaces</button>
+          <div id="get-space-result"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Supabase client
+    // IMPORTANT: Replace these with your actual Supabase credentials
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Sample user ID (use first user from database)
+    let currentUserId = null;
+
+    // Helper to show result
+    function showResult(elementId, success, data) {
+      const el = document.getElementById(elementId);
+      el.innerHTML = `
+        <div class="result ${success ? 'success' : 'error'}">
+          <div class="result-title">${success ? '✅ Success' : '❌ Error'}</div>
+          <div class="result-content">${JSON.stringify(data, null, 2)}</div>
+        </div>
+      `;
+    }
+
+    // Get all users
+    async function getAllUsers() {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        showResult('users-result', false, error);
+      } else {
+        // Save first user ID for other operations
+        if (data && data.length > 0) {
+          currentUserId = data[0].id;
+        }
+        showResult('users-result', true, data);
+      }
+    }
+
+    // Create status update
+    async function createStatus() {
+      if (!currentUserId) {
+        alert('Please fetch users first to get a user ID');
+        return;
+      }
+
+      const content = document.getElementById('status-content').value || '<p>Test status update</p>';
+      const postIn = document.getElementById('status-postin').value || 'Engineering';
+
+      const { data, error } = await supabase
+        .from('status_updates')
+        .insert({
+          user_id: currentUserId,
+          content: content,
+          post_in: postIn
+        })
+        .select()
+        .single();
+
+      showResult('status-result', !error, error || data);
+    }
+
+    // Get status updates
+    async function getStatuses() {
+      const { data, error } = await supabase
+        .from('status_updates')
+        .select(`
+          *,
+          users (name, profile_image_url, department)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      showResult('get-status-result', !error, error || data);
+    }
+
+    // Create document
+    async function createDocument() {
+      if (!currentUserId) {
+        alert('Please fetch users first to get a user ID');
+        return;
+      }
+
+      const title = document.getElementById('doc-title').value || 'Test Document';
+      const content = document.getElementById('doc-content').value || 'Document content';
+      const visibility = document.getElementById('doc-visibility').value;
+      const place = document.getElementById('doc-place').value || '';
+      const tagsStr = document.getElementById('doc-tags').value;
+      const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()) : [];
+      const status = document.getElementById('doc-status').value;
+
+      const { data, error } = await supabase
+        .from('documents')
+        .insert({
+          user_id: currentUserId,
+          title: title,
+          content: content,
+          visibility_type: visibility,
+          place_name: place,
+          tags: tags,
+          status: status,
+          restrict_comments: false
+        })
+        .select()
+        .single();
+
+      showResult('doc-result', !error, error || data);
+    }
+
+    // Get documents
+    async function getDocuments() {
+      const { data, error } = await supabase
+        .from('documents')
+        .select(`
+          *,
+          users (name, department)
+        `)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      showResult('get-doc-result', !error, error || data);
+    }
+
+    // Create blog post
+    async function createBlog() {
+      if (!currentUserId) {
+        alert('Please fetch users first to get a user ID');
+        return;
+      }
+
+      const title = document.getElementById('blog-title').value || 'Test Blog Post';
+      const content = document.getElementById('blog-content').value || 'Blog content';
+      const visibility = document.getElementById('blog-visibility').value;
+      const blogName = document.getElementById('blog-name').value || "Test Blog";
+      const place = document.getElementById('blog-place').value || '';
+      const tagsStr = document.getElementById('blog-tags').value;
+      const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()) : [];
+
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .insert({
+          user_id: currentUserId,
+          title: title,
+          content: content,
+          visibility_type: visibility,
+          place_name: place,
+          blog_name: blogName,
+          tags: tags,
+          status: 'published',
+          restrict_comments: false
+        })
+        .select()
+        .single();
+
+      showResult('blog-result', !error, error || data);
+    }
+
+    // Get blog posts
+    async function getBlogs() {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select(`
+          *,
+          users (name, department)
+        `)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      showResult('get-blog-result', !error, error || data);
+    }
+
+    // Create space
+    async function createSpace() {
+      if (!currentUserId) {
+        alert('Please fetch users first to get a user ID');
+        return;
+      }
+
+      const name = document.getElementById('space-name').value || 'Test Space';
+      const parent = document.getElementById('space-parent').value || '';
+
+      const { data, error } = await supabase
+        .from('spaces')
+        .insert({
+          user_id: currentUserId,
+          name: name,
+          parent_place: parent
+        })
+        .select()
+        .single();
+
+      showResult('space-result', !error, error || data);
+    }
+
+    // Get spaces
+    async function getSpaces() {
+      const { data, error } = await supabase
+        .from('spaces')
+        .select(`
+          *,
+          users (name, department)
+        `)
+        .order('name');
+
+      showResult('get-space-result', !error, error || data);
+    }
+
+    // Auto-fetch users on load
+    window.addEventListener('load', () => {
+      if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+        alert('⚠️ Please update SUPABASE_URL and SUPABASE_ANON_KEY in this file before testing!');
+      } else {
+        getAllUsers();
+      }
+    });
+  </script>
+</body>
+</html>
