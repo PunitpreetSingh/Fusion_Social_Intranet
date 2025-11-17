@@ -1,4 +1,4 @@
--- Insert Sample Users
+-- USERS
 INSERT INTO users (name, email, department, role) VALUES
 ('Mohit Verma', 'mohit.verma@daimler.com', 'Engineering', 'admin'),
 ('Yasaswini', 'yasaswini@daimler.com', 'Product Management', 'internal'),
@@ -7,16 +7,16 @@ INSERT INTO users (name, email, department, role) VALUES
 ('Michael Chen', 'michael.chen@daimler.com', 'Operations', 'internal')
 ON CONFLICT (email) DO NOTHING;
 
--- Insert Sample Spaces
+-- SPACES
 INSERT INTO spaces (name, created_by) VALUES
-('Daimler Truck Asia', (SELECT id FROM users WHERE email = 'mohit.verma@daimler.com' LIMIT 1)),
-('HQ', (SELECT id FROM users WHERE email = 'mohit.verma@daimler.com' LIMIT 1)),
-('Engineering', (SELECT id FROM users WHERE email = 'mohit.verma@daimler.com' LIMIT 1)),
-('Product Management', (SELECT id FROM users WHERE email = 'yasaswini@daimler.com' LIMIT 1)),
-('Design Team', (SELECT id FROM users WHERE email = 'reshabh@daimler.com' LIMIT 1))
+('Daimler Truck Asia', (SELECT id FROM users WHERE email = 'mohit.verma@daimler.com')),
+('HQ', (SELECT id FROM users WHERE email = 'mohit.verma@daimler.com')),
+('Engineering', (SELECT id FROM users WHERE email = 'mohit.verma@daimler.com')),
+('Product Management', (SELECT id FROM users WHERE email = 'yasaswini@daimler.com')),
+('Design Team', (SELECT id FROM users WHERE email = 'reshabh@daimler.com'))
 ON CONFLICT DO NOTHING;
 
--- Insert Sample Tags
+-- TAGS
 INSERT INTO tags (name) VALUES
 ('daimler_service'),
 ('mobile_ready'),
@@ -25,19 +25,35 @@ INSERT INTO tags (name) VALUES
 ('innovation'),
 ('Daimler busses'),
 ('social intranet')
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
--- Insert Sample Status Updates
-INSERT INTO status_updates (author_id, body, post_in) VALUES
-((SELECT id FROM users WHERE email = 'mohit.verma@daimler.com' LIMIT 1), 'Welcome to our new Social Intranet!', 'HQ'),
-((SELECT id FROM users WHERE email = 'yasaswini@daimler.com' LIMIT 1), 'Excited to share our new product roadmap with the team.', 'Product Management');
+-- STATUS UPDATES
+INSERT INTO status_updates (user_id, content, post_in) VALUES
+((SELECT id FROM users WHERE email = 'mohit.verma@daimler.com'), 'Welcome to our new Social Intranet!', 'HQ'),
+((SELECT id FROM users WHERE email = 'yasaswini@daimler.com'), 'Excited to share our product roadmap with the team.', 'Product Management');
 
--- Insert Sample Documents
-INSERT INTO documents (title, body, visibility) VALUES
-('Engineering Best Practices', '<p>This document outlines our engineering best practices...</p>', '{"type": "place", "placeName": "Engineering"}'),
-('Q1 2024 Product Roadmap', '<p>Our product roadmap for Q1 2024 includes...</p>', '{"type": "community"}');
+-- DOCUMENTS
+INSERT INTO documents (user_id, title, content, visibility_type, place_name, tags) VALUES
+((SELECT id FROM users WHERE email = 'mohit.verma@daimler.com'),
+ 'Engineering Best Practices',
+ '<p>This document outlines our engineering best practices...</p>',
+ 'place', 'Engineering', '{"training"}'),
 
--- Insert Sample Blog Posts
-INSERT INTO blogs (title, body, blog_for) VALUES
-('My First Post', '<p>Welcome to my personal blog on the Social Intranet!</p>', 'Mohit Verma''s Blog'),
-('Product Updates', '<p>Latest updates from the product team...</p>', 'Product Blog');
+((SELECT id FROM users WHERE email = 'yasaswini@daimler.com'),
+ 'Q1 2024 Product Roadmap',
+ '<p>Our product roadmap for Q1 2024 includes...</p>',
+ 'community', '', '{"innovation"}');
+
+-- BLOG POSTS
+INSERT INTO blog_posts (user_id, title, content, blog_name, tags) VALUES
+((SELECT id FROM users WHERE email = 'mohit.verma@daimler.com'),
+ 'My First Post',
+ '<p>Welcome to my personal blog on the Social Intranet!</p>',
+ 'Mohit Verma''s Blog',
+ '{"mftbc"}'),
+
+((SELECT id FROM users WHERE email = 'yasaswini@daimler.com'),
+ 'Product Updates',
+ '<p>Latest updates from the product team...</p>',
+ 'Product Blog',
+ '{"training"}');

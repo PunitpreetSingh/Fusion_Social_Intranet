@@ -3,7 +3,7 @@ import { User } from '../types';
 import { useState, useEffect } from 'react';
 import { RichTextEditor } from './RichTextEditor';
 import { PlaceSearch } from './PlaceSearch';
-import { apiFetch } from '../api/client';
+import apiClient from "../api/client";
 
 interface StatusUpdateModalProps {
   isOpen: boolean;
@@ -35,10 +35,24 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
   const handlePost = async (e?: any) => {
     e?.preventDefault();
 
-    if (!content.trim() || !user) return;
+    console.log("🟦 handlePost clicked");
+    console.log("User:", user);
 
-    if (user.role !== 'internal' && user.role !== 'admin') {
-      alert('Only internal users can post status updates');
+    if (!content.trim()) {
+      alert("Content is required");
+      return;
+    }
+
+    if (!user) {
+      alert("No user logged in");
+      return;
+    }
+
+    // SAFE CHECK (no error even if user is null)
+    const allowed = ["internal", "admin"];
+
+    if (!user || !allowed.includes(user.role)) {
+      alert("Only internal users can post status updates");
       return;
     }
 
@@ -48,28 +62,25 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
       const payload = {
         authorId: user.id,
         body: content,
-        postIn: postIn,
+        postIn: postIn || "",
         mentions: [],
         attachments: []
       };
 
-      console.log("Submitting payload:", payload);
+      console.log("📤 Sending payload:", payload);
 
-      const response = await apiFetch("/api/content/status", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      const response = await apiClient.createStatusUpdate(payload);
 
-      console.log("Backend response:", response);
+      console.log("✅ Backend Response:", response);
 
-      alert("✅ Status update posted!");
+      alert("Status update posted successfully!");
 
       setContent("");
       setPostIn("");
       onClose();
     } catch (error: any) {
-      console.error("Failed to post status update:", error);
-      alert(`❌ Error: ${error.message}`);
+      console.error("❌ Failed to post status update:", error);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -90,7 +101,7 @@ export function StatusUpdateModal({ isOpen, onClose, user }: StatusUpdateModalPr
         onClick={onClose}
       />
 
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[1000]" role="dialog" aria-modal="true">
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[1000]">
         <div
           className="bg-white rounded shadow-xl w-full max-w-2xl m-4 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
