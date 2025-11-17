@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { ProfileModal } from './components/ProfileModal';
 import { AppSearchModal } from './components/AppSearchModal';
@@ -12,6 +13,10 @@ import { DatabaseTest } from './components/DatabaseTest';
 import { useConfiguration } from './hooks/useConfiguration';
 import { useUser } from './hooks/useUser';
 import { useModal } from './contexts/ModalContext';
+
+const SpaceOverview = lazy(() => import('./pages/SpaceOverview/SpaceOverview'));
+const NewsList = lazy(() => import('./pages/News/NewsList'));
+const NewsDetail = lazy(() => import('./pages/News/NewsDetail'));
 
 function App() {
   const { config, loading: configLoading } = useConfiguration();
@@ -97,6 +102,14 @@ function App() {
           user={user}
         />
       )}
+
+      <Suspense fallback={<div style={{ padding: '100px 20px', textAlign: 'center' }}>Loading...</div>}>
+        <Routes>
+          <Route path="/space/:spaceId" element={<SpaceOverview />} />
+          <Route path="/space/:spaceId/news" element={<NewsList />} />
+          <Route path="/space/:spaceId/news/:newsId" element={<NewsDetail />} />
+        </Routes>
+      </Suspense>
 
       {/* <DatabaseTest /> */}
     </div>
