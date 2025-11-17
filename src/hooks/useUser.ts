@@ -1,64 +1,26 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { User } from '../types';
+import { useState, useEffect } from "react";
+import { User } from "../types";
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-
-        if (authUser) {
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', authUser.id)
-            .maybeSingle();
-
-          if (error) throw error;
-
-          if (data) {
-            setUser(data);
-          } else {
-            const mockUser: User = {
-              id: authUser.id,
-              email: authUser.email || '',
-              name: 'Mohit Verma',
-              department: 'IT/IAS-C',
-              profile_image_url: '',
-              role: 'internal',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-            setUser(mockUser);
-          }
-        }
-      } catch (err) {
-        setError(err as Error);
-        console.error('Error fetching user:', err);
-
-        const mockUser: User = {
-          id: 'mock-user-id',
-          email: 'mohit.verma@example.com',
-          name: 'Mohit Verma',
-          department: 'IT/IAS-C',
-          profile_image_url: '',
-          role: 'internal',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setUser(mockUser);
-      } finally {
-        setLoading(false);
-      }
+    // 🔥 ALWAYS return a logged-in user (mock/admin)
+    const mockUser: User = {
+      id: 1,
+      name: "Mohit Verma",
+      email: "mohit.verma@example.com",
+      department: "IT/IAS-C",
+      role: "admin",
+      profile_image_url: "",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
-    fetchUser();
+    setUser(mockUser);
+    setLoading(false);
   }, []);
 
-  return { user, loading, error };
+  return { user, loading, error: null };
 }
