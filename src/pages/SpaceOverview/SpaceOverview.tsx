@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Users, UserCheck, MessageSquare } from "lucide-react";
+import { Sidebar } from './components/Sidebar';
 import "./SpaceOverview.css";
 
 interface QuickAccessItem {
@@ -77,8 +78,10 @@ export const SpaceOverview: React.FC = () => {
   ];
 
   return (
-    <div className="page-container">
-      <div className="space-overview">
+    <>
+      <Sidebar />
+      <div className="page-container">
+        <div className="space-overview">
         {/* Header */}
         <div className="space-header">
           <div className="space-header-content">
@@ -150,8 +153,9 @@ export const SpaceOverview: React.FC = () => {
         <footer className="space-footer">
           <p>© 2025 FUSO. Part of Daimler Truck. All rights reserved.</p>
         </footer>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
