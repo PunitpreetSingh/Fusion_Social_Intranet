@@ -5,6 +5,13 @@
   margin: 0 auto;
   padding-left: 16px;
   padding-right: 16px;
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 1025px) {
+  .page-container {
+    margin-left: 280px;
+  }
 }
 
 .space-overview {
@@ -303,10 +310,17 @@
   margin: 0;
 }
 
+@media (max-width: 1024px) {
+  .page-container {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .page-container {
     padding-left: 12px;
     padding-right: 12px;
+    padding-top: 70px;
   }
 
   .space-header-content {
